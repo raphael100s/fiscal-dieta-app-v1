@@ -1,8 +1,29 @@
 import streamlit as st
+from datetime import datetime, timedelta
+
+# Lista de Alimentos com Pontos e Calorias incorporada
+alimentos = [
+    {"Tipo do Alimento": "Abacate médio", "Pontos": 80, "Calorias": 288},
+    {"Tipo do Alimento": "Abacaxi", "Pontos": 10, "Calorias": 36},
+    {"Tipo do Alimento": "Abóbora", "Pontos": 5, "Calorias": 18},
+    {"Tipo do Alimento": "Abobrinha", "Pontos": 0, "Calorias": 0},
+    {"Tipo do Alimento": "Abobrinha Recheada", "Pontos": 40, "Calorias": 144},
+    # Adicione o restante dos itens da lista conforme necessário
+]
 
 # Controle de navegação
 if "page" not in st.session_state:
     st.session_state.page = "home"
+
+# Inicializar o estado para a data e o consumo diário
+if "data_diario" not in st.session_state:
+    st.session_state.data_diario = datetime.today()
+if "consumo_diario" not in st.session_state:
+    st.session_state.consumo_diario = {"Café da manhã": [], "Almoço": [], "Lanches": [], "Jantar": []}
+if "calorias_totais" not in st.session_state:
+    st.session_state.calorias_totais = 0
+if "pontos_totais" not in st.session_state:
+    st.session_state.pontos_totais = 0
 
 # Função para alternar entre páginas
 def switch_page(page):
@@ -50,6 +71,9 @@ def calcular_tmb():
         meta_calorias = max(gasto_total - 1000, 1000 if sexo == 'Feminino' else 1200)
         meta_pontos = meta_calorias / 3.6
 
+        st.session_state.meta_calorias = meta_calorias
+        st.session_state.meta_pontos = meta_pontos
+
         st.markdown(
             f'''
             <div style="border: 2px solid #FFD700; padding: 20px; border-radius: 10px; background-color: #FFFFE0; color: black;">
@@ -60,7 +84,6 @@ def calcular_tmb():
             ''', unsafe_allow_html=True
         )
 
-    # Botão para mudar para a página de diário alimentar
     if st.button("Ir para o Diário Alimentar"):
         switch_page("diario_alimentar")
 
@@ -69,24 +92,33 @@ def diario_alimentar():
     st.title("Diário Alimentar")
     st.write("Registre aqui o que você consumiu nas refeições.")
 
-    # Função auxiliar para criar cada seção de refeição
+    # Seção de data com botões para avançar e retroceder
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col1:
+        if st.button("⬅️"):
+            st.session_state.data_diario -= timedelta(days=1)
+    with col2:
+        st.write(st.session_state.data_diario.strftime("%d/%m/%Y"))
+    with col3:
+        if st.button("➡️"):
+            st.session_state.data_diario += timedelta(days=1)
+
+    # Função auxiliar para criar cada seção de refeição e sumarizar calorias e pontos
     def criar_secao_refeicao(nome_refeicao):
-        st.header(nome_refeicao)
-        
-        # Opção de selecionar alimento de uma lista
-        alimento_selecionado = st.selectbox(f"Selecione o alimento para {nome_refeicao}:", ["Nenhum", "Maçã", "Banana", "Iogurte", "Pão Integral", "Ovo Cozido"])
+        st.header(f"{nome_refeicao} - Calorias: {sum([item['Calorias'] for item in st.session_state.consumo_diario[nome_refeicao]])} | Pontos: {sum([item['Pontos'] for item in st.session_state.consumo_diario[nome_refeicao]])}")
+
+        # Seleção do alimento e cálculo de calorias e pontos
+        alimento_selecionado = st.selectbox(f"Selecione o alimento para {nome_refeicao}:", ["Nenhum"] + [alimento["Tipo do Alimento"] for alimento in alimentos])
         
         if alimento_selecionado != "Nenhum":
-            st.write(f"Você adicionou **{alimento_selecionado}** ao {nome_refeicao}.")
-
-        # Opção de fazer upload de uma foto do prato
-        foto = st.file_uploader(f"Tire uma foto do seu prato para {nome_refeicao}:", type=["jpg", "jpeg", "png"])
-        
-        if foto is not None:
-            st.write("Foto enviada! O sistema está analisando...")
-            # Aqui chamamos a função do GPT "Fiscal da Dieta" para analisar a foto e registrar a refeição
-            # resultado = fiscal_da_dieta_analisar_foto(foto, nome_refeicao)  # Exemplo de chamada de função
-            # st.write(f"Alimentos identificados: {resultado}")
+            alimento_info = next(item for item in alimentos if item["Tipo do Alimento"] == alimento_selecionado)
+            st.session_state.consumo_diario[nome_refeicao].append({
+                "Alimento": alimento_selecionado,
+                "Calorias": alimento_info["Calorias"],
+                "Pontos": alimento_info["Pontos"]
+            })
+            st.session_state.calorias_totais += alimento_info["Calorias"]
+            st.session_state.pontos_totais += alimento_info["Pontos"]
 
     # Criando seções para cada refeição
     criar_secao_refeicao("Café da manhã")
@@ -94,8 +126,22 @@ def diario_alimentar():
     criar_secao_refeicao("Lanches")
     criar_secao_refeicao("Jantar")
 
-    # Botão para voltar à página de cálculo de TMB
-    if st.button("Voltar para o Cálculo de TMB"):
+    # Exibindo o resumo diário
+    st.markdown(
+        f'''
+        <div style="border: 2px solid #4682B4; padding: 20px; border-radius: 10px; background-color: #E0FFFF; color: black;">
+            <h3 style="text-align: center;">Resumo Diário</h3>
+            <p style="text-align: center; font-size: 20px;"><b>Meta de Calorias: {st.session_state.meta_calorias:.2f}</b></p>
+            <p style="text-align: center; font-size: 20px;"><b>Calorias Consumidas: {st.session_state.calorias_totais:.2f}</b></p>
+            <p style="text-align: center; font-size: 20px;"><b>Saldo de Calorias: {st.session_state.meta_calorias - st.session_state.calorias_totais:.2f}</b></p>
+            <p style="text-align: center; font-size: 20px;"><b>Meta de Pontos: {st.session_state.meta_pontos:.2f}</b></p>
+            <p style="text-align: center; font-size: 20px;"><b>Pontos Consumidos: {st.session_state.pontos_totais:.2f}</b></p>
+            <p style="text-align: center; font-size: 20px;"><b>Saldo de Pontos: {st.session_state.meta_pontos - st.session_state.pontos_totais:.2f}</b></p>
+        </div>
+        ''', unsafe_allow_html=True
+    )
+
+       if st.button("Voltar para o Cálculo de TMB"):
         switch_page("home")
 
 # Controle de navegação entre as páginas
