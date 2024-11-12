@@ -1,31 +1,4 @@
-import openai
 import streamlit as st
-
-# Configure sua chave de API
-openai.api_key = "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"
-
-def fiscal_da_dieta_analisar_foto(foto, nome_refeicao):
-    # Primeiro, convertemos a imagem em uma descrição textual para enviar ao GPT
-    # Como Streamlit não faz OCR diretamente, usamos uma descrição simples
-    # Exemplo de instrução para o GPT
-    prompt = f"Analise a refeição para {nome_refeicao} com base na imagem fornecida. Considere que a foto inclui alimentos comuns para essa refeição."
-
-    # Chamamos o GPT para responder à análise da imagem (usando uma descrição genérica)
-    try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",  # Use o modelo adequado para sua tarefa
-            prompt=prompt,
-            max_tokens=150,
-            temperature=0.5
-        )
-        
-        # Processar a resposta do GPT
-        resultado = response.choices[0].text.strip()
-        return resultado
-
-    except Exception as e:
-        st.error("Erro ao chamar a API do GPT: " + str(e))
-        return "Erro na análise da imagem."
 
 # Controle de navegação
 if "page" not in st.session_state:
@@ -111,8 +84,9 @@ def diario_alimentar():
         
         if foto is not None:
             st.write("Foto enviada! O sistema está analisando...")
-            resultado = fiscal_da_dieta_analisar_foto(foto, nome_refeicao)
-            st.write(f"Alimentos identificados: {resultado}")
+            # Aqui chamamos a função do GPT "Fiscal da Dieta" para analisar a foto e registrar a refeição
+            # resultado = fiscal_da_dieta_analisar_foto(foto, nome_refeicao)  # Exemplo de chamada de função
+            # st.write(f"Alimentos identificados: {resultado}")
 
     # Criando seções para cada refeição
     criar_secao_refeicao("Café da manhã")
