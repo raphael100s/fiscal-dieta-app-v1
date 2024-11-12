@@ -1,6 +1,3 @@
-# Atualizando o código para definir os valores padrão dos campos como 0 e salvar novamente
-
-codigo_atualizado = """
 import streamlit as st
 
 def calcular_tmb():
@@ -37,12 +34,7 @@ def calcular_tmb():
     st.write(f"Seu gasto calórico total aproximado é de {gasto_total:.2f} calorias por dia.")
 
 calcular_tmb()
-"""
 
-# Salvando o código atualizado em um novo arquivo .py
-file_path_atualizado = "/mnt/data/calculadora_tmb_com_zero.py"
-with open(file_path_atualizado, "w") as file:
-    file.write(codigo_atualizado)
 
 file_path_atualizado
 
