@@ -140,8 +140,8 @@ def diario_alimentar():
         </div>
         ''', unsafe_allow_html=True
     )
-
-       if st.button("Voltar para o Cálculo de TMB"):
+    # Botão para voltar à página de cálculo de TMB
+    if st.button("Voltar para o Cálculo de TMB"):
         switch_page("home")
 
 # Controle de navegação entre as páginas
@@ -149,3 +149,4 @@ if st.session_state.page == "home":
     calcular_tmb()
 elif st.session_state.page == "diario_alimentar":
     diario_alimentar()
+
